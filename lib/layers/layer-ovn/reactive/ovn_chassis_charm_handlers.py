@@ -122,9 +122,9 @@ def configure_ovs():
         if (reactive.is_flag_set('config.changed.source')
                 or reactive.is_flag_set('config.changed.ovn-source')):
             charm_instance.upgrade_if_available(
-                    charm.optional_interfaces((ovsdb,),
-                                              'nova-compute.connected',
-                                              'amqp.connected'))
+                charm.optional_interfaces((ovsdb,),
+                                          'nova-compute.connected',
+                                          'amqp.connected'))
         if reactive.is_flag_set('config.changed.enable-dpdk'):
             # Install required packages and/or run update-alternatives
             charm_instance.install()
@@ -174,9 +174,9 @@ def provide_chassis_certificates_to_principal():
             ovn_key = es.enter_context(
                 open(charm_instance.options.ovn_key, 'r'))
             ovsdb_subordinate.publish_chassis_certificates(
-                    ovn_ca_cert.read(),
-                    ovn_cert.read(),
-                    ovn_key.read())
+                ovn_ca_cert.read(),
+                ovn_cert.read(),
+                ovn_key.read())
     except OSError as e:
         ch_core.hookenv.log('Unable to provide principal with '
                             'chassis certificates: "{}"'.format(str(e)),
