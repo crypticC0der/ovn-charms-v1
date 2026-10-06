@@ -26,6 +26,7 @@ class TestRegisteredHooks(test_utils.TestRegisteredHooks):
         hook_set = {
             'when_none': {
                 'configure_nrpe': ('charm.paused', 'is-update-status-hook',),
+                'configure_doca': ('is-update-status-hook',),
             },
             'when_not': {
                 'enable_ovn_chassis_handlers': ('MOCKED_FLAG',),
@@ -33,12 +34,14 @@ class TestRegisteredHooks(test_utils.TestRegisteredHooks):
             },
             'when': {
                 'configure_nrpe': ('config.rendered',),
+                'configure_doca': ('charm.installed',),
             },
             'when_any': {
                 'configure_nrpe': ('config.changed.nagios_context',
                                    'config.changed.nagios_servicegroups',
                                    'endpoint.nrpe-external-master.changed',
                                    'nrpe-external-master.available',),
+                'configure_doca': ('config.changed.install-doca',),
             },
         }
         # test that the hooks were registered via the
@@ -52,3 +55,10 @@ class TestOvnHandlers(test_utils.PatchHelper):
         self.patch_object(handlers.reactive, 'set_flag')
         handlers.enable_ovn_chassis_handlers()
         self.set_flag.assert_called_once_with('MOCKED_FLAG')
+
+    def test_configure_doca(self):
+        self.patch_object(handlers.charm, 'provide_charm_instance')
+        instance = self.provide_charm_instance.return_value.__enter__ \
+            .return_value
+        handlers.configure_doca()
+        instance.configure_doca.assert_called_once_with()

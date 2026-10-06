@@ -20,4 +20,15 @@ options:
     description: |
       Allow the charm and packages to restart services automatically when
       required.
+  install-doca:
+    type: boolean
+    default: False
+    description: >-
+      Install NVIDIA DOCA OFED drivers for ConnectX/BlueField NICs.
+      The DOCA host repo .deb is downloaded from doca-url at runtime.
+  doca-url:
+    type: string
+    default: https://www.mellanox.com/downloads/DOCA/DOCA_v3.5.0/host/doca-host_3.5.0-082000-26.07-ubuntu2404_amd64.deb
+    description: >-
+      URL to the NVIDIA DOCA host repo .deb package.
 

@@ -39,3 +39,12 @@ def configure_nrpe():
     """Handle config-changed for NRPE options."""
     with charm.provide_charm_instance() as charm_instance:
         charm_instance.render_nrpe()
+
+
+@reactive.when_none('is-update-status-hook')
+@reactive.when('charm.installed')
+@reactive.when_any('config.changed.install-doca')
+def configure_doca():
+    """Handle config-changed for the install-doca option."""
+    with charm.provide_charm_instance() as instance:
+        instance.configure_doca()
