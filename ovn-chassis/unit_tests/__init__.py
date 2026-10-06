@@ -62,18 +62,44 @@ sys.modules['charms.leadership'] = charms.leadership
 netaddr = mock.MagicMock()
 sys.modules['netaddr'] = netaddr
 
+# ``mock_charmhelpers()`` replaces ``charmhelpers.contrib.network`` with a
+# MagicMock, which stops its submodules from being imported by name.
+sys.modules['charmhelpers.contrib.network.ovs'] = mock.MagicMock()
+sys.modules['charmhelpers.contrib.network.ovs.ovsdb'] = mock.MagicMock()
+
 
 # The real base classes live in the ``layer:ovn`` build-time layer, which is
-# assembled by charmcraft and is not available here, and a MagicMock cannot
-# be subclassed.  Provide minimal stand ins so that
-# ``charm.openstack.ovn_chassis`` can be imported and its own overrides
-# exercised.
+# assembled by charmcraft and is not available here.  Provide minimal stand
+# ins so that ``charm.openstack.ovn_chassis`` can be imported and its own
+# overrides exercised.  These deliberately mirror the parts of the real
+# classes the charm cooperates with, in particular that
+# ``DeferredEventMixin.configure_ovs`` takes a ``check_deferred_events``
+# keyword argument and only delegates upwards when a restart is permitted.
 class _FakeBaseOVNChassisCharm(object):
-    pass
+
+    def configure_ovs(self, sb_conn, mlockall_changed):
+        pass
+
+    def configure_bridges(self):
+        pass
+
+    def check_if_paused(self):
+        return (None, None)
+
+    def custom_assess_status_last_check(self):
+        return (None, None)
 
 
 class _FakeDeferredEventMixin(object):
-    pass
+
+    # Set to False by tests that need to model deferred restarts.
+    restart_permitted = True
+
+    def configure_ovs(self, sb_conn, mlockall_changed,
+                      check_deferred_events=True):
+        if check_deferred_events and not self.restart_permitted:
+            return
+        super().configure_ovs(sb_conn, mlockall_changed)
 
 
 charms.ovn_charm = mock.MagicMock()

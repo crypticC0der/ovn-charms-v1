@@ -48,3 +48,18 @@ def configure_doca():
     """Handle config-changed for the install-doca option."""
     with charm.provide_charm_instance() as instance:
         instance.configure_doca()
+
+
+@reactive.when_none('charm.paused')
+@reactive.when('config.rendered')
+def configure_datapath_type():
+    """Correct the datapath type of existing Open vSwitch resources.
+
+    Deliberately not excluded from the update status hook, unlike the base
+    charm's own bridge configuration.  Juju runs no hook when a unit boots,
+    so a unit that just rebooted into its DOCA kernel modules would otherwise
+    keep running on the kernel datapath until an unrelated hook happened to
+    fire.
+    """
+    with charm.provide_charm_instance() as instance:
+        instance.configure_datapath_type()

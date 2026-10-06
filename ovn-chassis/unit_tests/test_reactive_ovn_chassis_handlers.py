@@ -27,6 +27,9 @@ class TestRegisteredHooks(test_utils.TestRegisteredHooks):
             'when_none': {
                 'configure_nrpe': ('charm.paused', 'is-update-status-hook',),
                 'configure_doca': ('is-update-status-hook',),
+                # Deliberately permitted during the update status hook, as
+                # Juju runs no hook when a unit boots.
+                'configure_datapath_type': ('charm.paused',),
             },
             'when_not': {
                 'enable_ovn_chassis_handlers': ('MOCKED_FLAG',),
@@ -35,6 +38,7 @@ class TestRegisteredHooks(test_utils.TestRegisteredHooks):
             'when': {
                 'configure_nrpe': ('config.rendered',),
                 'configure_doca': ('charm.installed',),
+                'configure_datapath_type': ('config.rendered',),
             },
             'when_any': {
                 'configure_nrpe': ('config.changed.nagios_context',
@@ -55,6 +59,13 @@ class TestOvnHandlers(test_utils.PatchHelper):
         self.patch_object(handlers.reactive, 'set_flag')
         handlers.enable_ovn_chassis_handlers()
         self.set_flag.assert_called_once_with('MOCKED_FLAG')
+
+    def test_configure_datapath_type(self):
+        self.patch_object(handlers.charm, 'provide_charm_instance')
+        instance = self.provide_charm_instance.return_value.__enter__ \
+            .return_value
+        handlers.configure_datapath_type()
+        instance.configure_datapath_type.assert_called_once_with()
 
     def test_configure_doca(self):
         self.patch_object(handlers.charm, 'provide_charm_instance')
