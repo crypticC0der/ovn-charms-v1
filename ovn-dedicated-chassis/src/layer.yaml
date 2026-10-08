@@ -2,7 +2,7 @@ includes:
   - layer:ovn
   - interface:ovsdb
   - interface:nrpe-external-master
-# The global neutron-plugin metadata provider is shipped locally under
+# The neutron-plugin-remote metadata provider is shipped locally under
 # hooks/relations: the subordinate interface uses per-unit shared secrets.
 options:
   basic:

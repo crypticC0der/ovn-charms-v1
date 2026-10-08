@@ -18,7 +18,7 @@ requires:
     interface: ovsdb
 provides:
   nova-compute:
-    interface: neutron-plugin
+    interface: neutron-plugin-remote
     scope: global
   nrpe-external-master:
     interface: nrpe-external-master

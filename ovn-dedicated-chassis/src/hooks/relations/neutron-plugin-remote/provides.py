@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The neutron-plugin metadata protocol for remotely managed chassis.
+"""The neutron-plugin-remote metadata protocol for remotely managed chassis.
 
 This provider is local to the charm because the subordinate interface creates
 per-unit secrets. With a global relation every compute sees every DPU, so all
-DPUs must publish and use the same secret.
+DPUs must publish and use the same secret. A distinct interface keeps remote
+chassis separate from container-scoped neutron-plugin relations.
 """
 
 import uuid
@@ -28,7 +29,7 @@ from charms.reactive import Endpoint, toggle_flag, when, when_not
 METADATA_KEY = 'metadata-shared-secret'
 
 
-class NeutronPluginProvides(Endpoint):
+class NeutronPluginRemoteProvides(Endpoint):
     """Provide metadata proxy credentials to remote Nova compute hosts."""
 
     @when('endpoint.{endpoint_name}.joined')

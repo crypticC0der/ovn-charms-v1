@@ -93,24 +93,27 @@ secret to Nova's metadata API. The agent connects to a related compute host,
 rather than to localhost. All units of the dedicated chassis application use
 the same secret.
 
-This requires a nova-compute charm whose `neutron-plugin` endpoint supports
-global scope. The stock nova-compute charm declares `scope: container`; that
-must be removed (or changed to `scope: global`) in nova-compute's
-`metadata.yaml` before relating these applications on separate machines:
+This requires a nova-compute charm implementing a new `neutron-plugin-remote`
+endpoint with the `neutron-plugin-remote` interface and global scope. Its existing
+`neutron-plugin` endpoint retains container scope for colocated subordinates.
+The new endpoint is declared in nova-compute's `metadata.yaml` as follows:
 
 ```yaml
 requires:
-  neutron-plugin:
-    interface: neutron-plugin
+  neutron-plugin-remote:
+    interface: neutron-plugin-remote
     scope: global
 ```
 
-The existing subordinate ovn-chassis relation remains container-scoped because
-ovn-chassis declares that scope on its own endpoint.
+Nova must also handle this endpoint's relation events and consume its
+`metadata-shared-secret` when installing and configuring `nova-api-metadata`.
+The DPU publishes that value as raw unit relation data; the compute unit's
+`private-address` identifies the metadata API host on port 8775. Merely adding
+the endpoint declaration to Nova does not implement this support.
 
 With a compatible nova-compute charm deployed, add the relation:
 
-    juju integrate ovn-dedicated-chassis:nova-compute nova-compute:neutron-plugin
+    juju integrate ovn-dedicated-chassis:nova-compute nova-compute:neutron-plugin-remote
 
 The DPU must be able to reach the compute hosts' relation addresses on TCP port
 8775. Relate the dedicated chassis application to the compute application for

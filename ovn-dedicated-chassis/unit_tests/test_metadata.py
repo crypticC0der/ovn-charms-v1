@@ -18,13 +18,16 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import jinja2
+import yaml
 import charms_openstack.test_utils as test_utils
 
 
 SOURCE = Path(__file__).resolve().parents[1] / 'src'
+METADATA = yaml.safe_load((SOURCE / 'metadata.yaml').read_text())
+INTERFACE = METADATA['provides']['nova-compute']['interface']
 spec = importlib.util.spec_from_file_location(
     'metadata_provider',
-    SOURCE / 'hooks/relations/neutron-plugin/provides.py')
+    SOURCE / 'hooks/relations' / INTERFACE / 'provides.py')
 provider = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(provider)
 
@@ -37,7 +40,7 @@ class TestMetadataRelation(test_utils.PatchHelper):
         self.patch_object(provider, 'toggle_flag')
         self.hookenv.leader_get.return_value = None
         self.hookenv.is_leader.return_value = False
-        self.endpoint = provider.NeutronPluginProvides()
+        self.endpoint = provider.NeutronPluginRemoteProvides()
         self.endpoint.expand_name = lambda flag: flag.replace(
             '{endpoint_name}', 'nova-compute')
         self.endpoint.all_joined_units = [self.unit('192.0.2.10')]
@@ -103,7 +106,7 @@ class TestMetadataRelation(test_utils.PatchHelper):
         for is_leader in (True, False):
             with self.subTest(is_leader=is_leader):
                 self.hookenv.is_leader.return_value = is_leader
-                endpoint = provider.NeutronPluginProvides()
+                endpoint = provider.NeutronPluginRemoteProvides()
                 endpoint.relations = [
                     SimpleNamespace(to_publish_raw={}),
                     SimpleNamespace(to_publish_raw={}),
