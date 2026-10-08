@@ -2,6 +2,8 @@ includes:
   - layer:ovn
   - interface:ovsdb
   - interface:nrpe-external-master
+# The global neutron-plugin metadata provider is shipped locally under
+# hooks/relations: the subordinate interface uses per-unit shared secrets.
 options:
   basic:
     use_venv: True
@@ -18,7 +20,6 @@ config:
     - enable-sriov
     - networking-tools-source
     - sriov-device-mappings
-    - debug
     - ssl_ca
     - ssl_cert
     - ssl_key
