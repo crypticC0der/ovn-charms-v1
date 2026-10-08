@@ -84,6 +84,48 @@ that network.
 Networks for use with external Layer2 connectivity should have mappings present
 on all chassis with potential to host the consuming payload.
 
+## Metadata for remote-managed ports
+
+When this charm runs on a SmartNIC DPU, instances using
+[remote-managed ports][ovn-smartnic-dpu] need a Neutron OVN metadata agent on
+the DPU. The `nova-compute` relation enables this agent and supplies its shared
+secret to Nova's metadata API. The agent connects to a related compute host,
+rather than to localhost. All units of the dedicated chassis application use
+the same secret.
+
+This requires a nova-compute charm whose `neutron-plugin` endpoint supports
+global scope. The stock nova-compute charm declares `scope: container`; that
+must be removed (or changed to `scope: global`) in nova-compute's
+`metadata.yaml` before relating these applications on separate machines:
+
+```yaml
+requires:
+  neutron-plugin:
+    interface: neutron-plugin
+    scope: global
+```
+
+The existing subordinate ovn-chassis relation remains container-scoped because
+ovn-chassis declares that scope on its own endpoint.
+
+With a compatible nova-compute charm deployed, add the relation:
+
+    juju integrate ovn-dedicated-chassis:nova-compute nova-compute:neutron-plugin
+
+The DPU must be able to reach the compute hosts' relation addresses on TCP port
+8775. Relate the dedicated chassis application to the compute application for
+its Nova cell. A compute API can serve metadata for instances on other hosts in
+that cell, including after migration. Use a single dedicated chassis application
+for those DPUs so their credentials agree; connecting independent metadata
+providers with different secrets to the same compute application is not
+supported.
+
+The existing `ovsdb` and `certificates` relations are also required. Once the
+relation is ready, the charm installs and manages `neutron-ovn-metadata-agent`
+and renders `/etc/neutron/neutron_ovn_metadata_agent.ini` on each DPU. This
+allows instances to obtain metadata without requiring config-drive. It does not
+change Nova's other restrictions on migrating remote-managed PCI devices.
+
 ## Deferred service events
 
 Operational or maintenance procedures applied to a cloud often lead to the
@@ -116,3 +158,4 @@ For general questions please refer to the [OpenStack Charm Guide][cg].
 [ovn-chassis-charm]: https://jaas.ai/ovn-chassis
 [openstack-base-bundle]: https://github.com/openstack-charmers/openstack-bundles/blob/master/development/openstack-base-bionic-ussuri-ovn/bundle.yaml
 [cdg-deferred-service-events]: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/deferred-events.html
+[ovn-smartnic-dpu]: https://docs.openstack.org/neutron/latest/admin/ovn/smartnic_dpu.html
